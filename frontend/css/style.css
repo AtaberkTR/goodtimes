@@ -1,0 +1,23 @@
+body{
+    background-color: rgb(155, 135, 135);
+
+}
+button{
+    display: block;
+    position: fixed;
+    top: 100px;
+    left: 50px;
+    size: 100px;
+    height: 150px;
+    width: 500px;
+    
+}
+.test{
+    display: block;
+    position: fixed;
+    top: 100px;
+    left: 50px;
+    size: 100px;
+    height: 150px;
+    width: 500px;
+}
