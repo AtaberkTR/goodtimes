@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoodTimes - Video Platformu</title>
+    <link rel="stylesheet" href="frontend/css/style.css">
+    <style>
+        body {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 {
+            margin-top: 20px;
+            font-size: 3em;
+            color: #e74c3c;
+        }
+        form {
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 80%;
+            max-width: 600px;
+            margin: 20px 0;
+        }
+        label, input, textarea, button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        input, textarea {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #e74c3c;
+            color: #ecf0f1;
+            border: none;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        button:hover {
+            background-color: #c0392b;
+        }
+        h2 {
+            margin-top: 20px;
+            font-size: 2em;
+        }
+        #video-list {
+            width: 80%;
+            max-width: 600px;
+        }
+        #video-list div {
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+        video {
+            width: 100%;
+            border-radius: 10px;
+        }
+        .video-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .video-item {
+            width: 30%;
+            margin-bottom: 20px;
+        }
+        .video-thumbnail {
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 en-boy oranı */
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+        }
+        .video-info {
+            padding: 10px;
+        }
+        .video-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .video-description {
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+        .video-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .like-dislike button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #ecf0f1;
+        }
+        .view-count {
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+        #search-form {
+            margin-bottom: 20px;
+        }
+        #search-input {
+            padding: 10px;
+            width: 300px;
+        }
+        #search-button {
+            padding: 10px 20px;
+        }
+        
+        /* Sohbet botu için yeni stiller */
+        #chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            background-color: #34495e;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #chatbot-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        #chatbot-input {
+            display: flex;
+            padding: 10px;
+        }
+        #chatbot-input input {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .chatbot-message {
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+        .user-message {
+            background-color: #3498db;
+            align-self: flex-end;
+        }
+        .bot-message {
+            background-color: #2ecc71;
+            align-self: flex-start;
+        }
+    </style>
+</head>
+<body>
+    <h1>GoodTimes</h1>
+    
+    <!-- Arama formu -->
+    <form id="search-form">
+        <input type="text" id="search-input" placeholder="Video ara...">
+        <button type="submit" id="search-button">Ara</button>
+    </form>
+
+    <form id="upload-form">
+        <label for="title">Video Başlığı:</label>
+        <input type="text" id="title" name="title" required>
+        <label for="description">Açıklama:</label>
+        <textarea id="description" name="description" required></textarea>
+        <label for="video">Video Yükle:</label>
+        <input type="file" id="video" name="video" accept="video/*" required>
+        <button type="submit">Yükle</button>
+    </form>
+    <h2>Popüler Videolar</h2>
+    <div id="video-list" class="video-container">
+        <!-- Videolar burada listelenecek -->
+    </div>
+
+    <!-- Sohbet botu container'ı -->
+    <div id="chatbot-container">
+        <div id="chatbot-messages"></div>
+        <div id="chatbot-input">
+            <input type="text" id="chatbot-input-text" placeholder="Bir mesaj yazın...">
+            <button onclick="sendMessage()">Gönder</button>
+        </div>
+    </div>
+
+    <script>
+        function createVideoElement(video) {
+            const videoElement = document.createElement('div');
+            videoElement.className = 'video-item';
+            videoElement.setAttribute('data-video-id', video._id);
+            videoElement.innerHTML = `
+                <div class="video-thumbnail" style="background-image: url('${video.thumbnailPath}')" onclick="playVideo('${video.videoPath}', '${video.title}', '${video.description}')"></div>
+                <div class="video-info">
+                    <div class="video-title">${video.title}</div>
+                    <div class="video-description">${video.description}</div>
+                    <div class="view-count">${video.views || 0} görüntülenme</div>
+                    <div class="video-actions">
+                        <div class="like-dislike">
+                            <button onclick="likeVideo('${video._id}')">👍 ${video.likes || 0}</button>
+                            <button onclick="dislikeVideo('${video._id}')">👎 ${video.dislikes || 0}</button>
+                        </div>
+                        <button onclick="deleteVideo('${video._id}')">Sil</button>
+                    </div>
+                </div>
+            `;
+            return videoElement;
+        }
+
+        function loadVideos(videos) {
+            const videoList = document.getElementById('video-list');
+            videoList.innerHTML = '';
+            videos.forEach(video => {
+                videoList.appendChild(createVideoElement(video));
+            });
+        }
+
+        fetch('/videos')
+            .then(response => response.json())
+            .then(loadVideos);
+
+        function playVideo(videoPath, title, description) {
+            const videoPlayer = document.createElement('div');
+            videoPlayer.innerHTML = `
+                <h2>${title}</h2>
+                <video controls autoplay>
+                    <source src="${videoPath}" type="video/mp4">
+                    Tarayıcınız video etiketini desteklemiyor.
+                </video>
+                <p>${description}</p>
+            `;
+            document.body.insertBefore(videoPlayer, document.body.firstChild);
+        }
+
+        document.getElementById('upload-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Formun varsayılan davranışını engelle
+            
+            const formData = new FormData(this);
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text);
+                    });
+                }
+                return response.json();
+            })
+            .then(video => {
+                alert('Video başarıyla yüklendi!');
+                const videoList = document.getElementById('video-list');
+                videoList.appendChild(createVideoElement(video));
+                this.reset(); // formu temizle
+            })
+            .catch(error => {
+                console.error('Hata:', error);
+                alert(`Video yüklenirken bir hata oluştu: ${error.message}`);
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const videoList = document.getElementById('video-list');
+
+            // Videoları yükle
+            fetch('/videos')
+                .then(response => response.json())
+                .then(videos => {
+                    videos.forEach(video => {
+                        const videoElement = document.createElement('div');
+                        videoElement.className = 'video-item';
+                        videoElement.innerHTML = `
+                            <div class="video-thumbnail" style="background-image: url('${video.thumbnailPath}')" onclick="playVideo('${video.videoPath}', '${video.title}', '${video.description}')"></div>
+                            <div class="video-info">
+                                <div class="video-title">${video.title}</div>
+                                <div class="video-description">${video.description}</div>
+                            </div>
+                            <button onclick="deleteVideo('${video._id}')">Sil</button>
+                        `;
+                        videoList.appendChild(videoElement);
+                    });
+                });
+
+            // Video silme fonksiyonu
+            window.deleteVideo = function(videoId) {
+                fetch(`/videos/${videoId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.text())
+                .then(data => {
+                    alert('Video başarıyla silindi!');
+                    // Sayfayı yenilemek yerine sadece silinen videoyu kaldır
+                    const videoElement = document.querySelector(`[data-video-id="${videoId}"]`);
+                    if (videoElement) {
+                        videoElement.remove();
+                    }
+                })
+                .catch(error => {
+                    console.error('Hata:', error);
+                    alert('Video silinirken bir hata oluştu.');
+                });
+            };
+        });
+
+        function likeVideo(videoId) {
+            fetch(`/videos/${videoId}/like`, { method: 'POST' })
+                .then(() => fetch('/videos'))
+                .then(response => response.json())
+                .then(loadVideos);
+        }
+
+        function dislikeVideo(videoId) {
+            fetch(`/videos/${videoId}/dislike`, { method: 'POST' })
+                .then(() => fetch('/videos'))
+                .then(response => response.json())
+                .then(loadVideos);
+        }
+
+        document.getElementById('search-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const searchTerm = document.getElementById('search-input').value;
+            fetch(`/videos/search?q=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(loadVideos);
+        });
+
+        // Sohbet botu için yeni JavaScript kodu
+        const chatbotMessages = document.getElementById('chatbot-messages');
+        const chatbotInputText = document.getElementById('chatbot-input-text');
+
+        function addMessage(message, isUser = false) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chatbot-message');
+            messageElement.classList.add(isUser ? 'user-message' : 'bot-message');
+            messageElement.textContent = message;
+            chatbotMessages.appendChild(messageElement);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = chatbotInputText.value.trim();
+            if (message) {
+                addMessage(message, true);
+                chatbotInputText.value = '';
+                
+                // Burada gerçek bir AI entegrasyonu yapabilirsiniz
+                // Şimdilik basit bir yanıt döndürelim
+                setTimeout(() => {
+                    const botResponse = "Merhaba! Şu anda basit bir yanıt veriyorum. Daha gelişmiş bir AI entegrasyonu için çalışmalar devam ediyor.";
+                    addMessage(botResponse);
+                }, 1000);
+            }
+        }
+
+        chatbotInputText.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Sayfa yüklendiğinde hoş geldin mesajı
+        addMessage("Merhaba! Size nasıl yardımcı olabilirim?");
+    </script>
+</body>
+</html>
